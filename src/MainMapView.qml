@@ -62,6 +62,7 @@ Item {
     Map {
         id: mapView
         plugin: mapProvider
+        activeMapType: supportedMapTypes[supportedMapTypes.length - 1]
         anchors.fill: parent
         copyrightsVisible: false //this is compensated by showing the copyright when application is loading
         color: "#00000000"
@@ -109,6 +110,8 @@ Item {
             target: positionProvider
             function onPositionChanged() {
                 mapView.center = positionProvider.position.coordinate
+                if (mapView.zoomLevel < 13)
+                    mapView.zoomLevel = 15
             }
         }
         Connections {
@@ -119,9 +122,27 @@ Item {
                 }
             }
         }
+        // where the last position fix is
+        MapQuickItem {
+            id: positionMarker
+            coordinate: positionProvider.position.coordinate
+            visible: positionProvider.position.coordinate.isValid
+            anchorPoint.x: sourceItem.width / 2
+            anchorPoint.y: sourceItem.height / 2
+            z: 3
+            sourceItem: Rectangle {
+                width: Dims.l(6)
+                height: width
+                radius: width / 2
+                color: "#4285f4"
+                border.color: "white"
+                border.width: Dims.l(1)
+            }
+        }
         property MapQuickItem mapItem
         function updateWaypoints() {
             clearMapItems()
+            addMapItem(positionMarker)
             var waypointsList = JSON.parse(waypointSource.value)
             console.log(waypointsList)
             for(var i = 0, size = waypointsList.length; i < size ; i++){

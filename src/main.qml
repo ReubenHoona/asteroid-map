@@ -36,6 +36,11 @@ Application {
     Plugin {
         id: mapProvider
         name: "osm"
+        // the providers repository's street map needs an API key: use
+        // OpenStreetMap's own tiles (the custom map type)
+        PluginParameter { name: "osm.useragent"; value: "asteroid-map (AsteroidOS)" }
+        PluginParameter { name: "osm.mapping.providersrepository.disabled"; value: true }
+        PluginParameter { name: "osm.mapping.custom.host"; value: "https://tile.openstreetmap.org/" }
     }
     PositionSource {
         id: positionProvider
