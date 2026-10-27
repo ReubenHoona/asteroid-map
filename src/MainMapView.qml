@@ -117,7 +117,7 @@ Item {
         Connections {
             target: compass
             function onReadingChanged() {
-                if (compassMode.value == 2) {
+                if (compassMode.value == 2 && compass.reading) {
                     mapView.bearing = compass.reading.azimuth
                 }
             }
