@@ -16,63 +16,85 @@
  */
 import QtQuick
 import org.asteroid.controls
-import QtPositioning
-import QtLocation
 
+// Map settings as a stock CP3A Settings screen: a ListHeader first in the
+// list, then Material 3 switch rows (SwitchButton) 4 dp apart, then captions
+// (bodySmall, onSurfaceVariant). The list keeps 5.2 % at each side, starts
+// 16.64 % down and ends with 36.46 % of the height of room.
 Item {
     id: root
-    PageHeader {
-        text: "Map settings"
-    }
+
+    // set by the LayerStack
+    property int depth
+    property var pop
+
     Flickable {
+        id: flick
+        objectName: "settingsFlickable"
         anchors.fill: parent
-        contentHeight: contentColumn.implicitHeight
+        contentWidth: width
+        contentHeight: column.y + column.height + Theme.margin.listBottom
+        flickableDirection: Flickable.VerticalFlick
+        boundsBehavior: Flickable.DragOverBounds
+
         Column {
-            id: contentColumn
-            anchors.fill: parent
-            Item { width: parent.width ; height: root.width*0.2 }
-            LabeledSwitch {
+            id: column
+            y: Theme.margin.listTop
+            x: Theme.margin.listSide
+            width: root.width - 2 * x
+            spacing: Theme.space.xs
+
+            ListHeader {
+                objectName: "title"
+                //% "Map settings"
+                text: qsTrId("id-map-settings")
+            }
+            SwitchButton {
+                objectName: "compassSwitch"
                 width: parent.width
-                height: root.width*0.2
-                text: "enable compass"
-                Component.onCompleted: checked = enableCompass.value
-                onCheckedChanged: enableCompass.value = checked
+                //% "Compass"
+                text: qsTrId("id-map-compass")
+                checked: enableCompass.value
+                onToggled: (state) => enableCompass.value = state
             }
-            LabeledSwitch {
+            SwitchButton {
+                objectName: "gpsSwitch"
                 width: parent.width
-                height: root.width*0.2
-                text: "enable GPS"
-                Component.onCompleted: checked = prioritiseGPS.value
-                onCheckedChanged: prioritiseGPS.value = checked
+                //% "Use GPS"
+                text: qsTrId("id-map-use-gps")
+                checked: prioritiseGPS.value
+                onToggled: (state) => prioritiseGPS.value = state
             }
-            Item { width: parent.width ; height: root.width*0.2 }
-            Column {
-                width: parent.width*0.7
-                anchors.horizontalCenter: parent.horizontalCenter
-                Label {
-                    text: "Map Data © OpenStreetMap contributors"
-                    width: parent.width
-                    font.pixelSize: root.width*0.05
-                    wrapMode: Text.Wrap
-                }
-                Label {
-                    text: "under the ODbL"
-                    width: parent.width
-                    font.pixelSize: root.width*0.05
-                }
-            Item { width: parent.width ; height: root.width*0.05 }
-                Label {
-                    text: "Made by dodoradio"
-                    width: parent.width
-                    font.pixelSize: root.width*0.05
-                }
-                Label {
-                    text: "dodorad.io"
-                    width: parent.width
-                    font.pixelSize: root.width*0.05
-                }
+            Label {
+                objectName: "caption"
+                width: parent.width
+                role: "bodySmall"
+                color: Theme.color.onSurfaceVariant
+                leftPadding: Theme.space.xl
+                rightPadding: Theme.space.xl
+                topPadding: Theme.space.s
+                bottomPadding: Theme.space.s
+                wrapMode: Text.Wrap
+                clip: false
+                //% "Map Data © OpenStreetMap contributors"
+                text: qsTrId("id-map-osm-credit") + "\n" +
+                      //% "under the ODbL"
+                      qsTrId("id-map-odbl")
             }
-            Item { width: parent.width ; height: root.width*0.2 }
+            Label {
+                objectName: "credit"
+                width: parent.width
+                role: "bodySmall"
+                color: Theme.color.onSurfaceVariant
+                leftPadding: Theme.space.xl
+                rightPadding: Theme.space.xl
+                topPadding: Theme.space.s
+                bottomPadding: Theme.space.s
+                wrapMode: Text.Wrap
+                clip: false
+                //% "Made by dodoradio"
+                text: qsTrId("id-map-made-by") + "\ndodorad.io"
+            }
         }
     }
 }

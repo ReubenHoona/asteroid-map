@@ -18,77 +18,95 @@ import QtQuick
 import org.asteroid.controls
 import org.asteroid.utils
 
+// The buttons over the map: Material 3 tonal icon buttons (48 dp, the touch
+// target) in the corners of the round screen, 5.2 % from the side and 12 dp
+// above the bottom edge.
 Item {
+    id: controls
+
+    readonly property real buttonSize: Theme.size.iconButtonSmall
+
     IconButton {
+        objectName: "zoomIn"
         iconName: "ios-add-circle-outline"
+        size: controls.buttonSize
+        variant: "tonal"
         anchors.right: parent.right
+        anchors.rightMargin: Theme.margin.side
         anchors.verticalCenter: parent.verticalCenter
         anchors.verticalCenterOffset: - height/2 + DeviceSpecs.flatTireHeight/2
-        height: parent.height*0.2
-        width: height
-        iconColor: colors.primary
         z: 2
         onClicked: mapView.zoomLevel = mapView.zoomLevel + 0.3
     }
     IconButton {
+        objectName: "zoomOut"
         iconName: "ios-remove-circle-outline"
+        size: controls.buttonSize
+        variant: "tonal"
         anchors.right: parent.right
+        anchors.rightMargin: Theme.margin.side
         anchors.verticalCenter: parent.verticalCenter
         anchors.verticalCenterOffset: height/2 + DeviceSpecs.flatTireHeight/2
-        height: parent.height*0.2
-        width: height
-        iconColor: colors.primary
         z: 2
         onClicked: mapView.zoomLevel = mapView.zoomLevel - 0.3
     }
-    MouseArea {
+    IconButton {
+        objectName: "compassMode"
+        // the icon turns with the heading in compass mode 1 (the old button
+        // turned 360 - azimuth with the icon 45 degrees back)
+        rotation: compassMode.value == 1 && compass.reading ? 315 - compass.reading.azimuth : 0
+        iconName: compass.reading && compass.reading.calibrationLevel > 0 ? "ios-compass-outline" : "ios-infinite-outline"
+        size: controls.buttonSize
+        variant: "tonal"
         anchors.left: parent.left
+        anchors.leftMargin: Theme.margin.side
         anchors.verticalCenter: parent.verticalCenter
         anchors.verticalCenterOffset: - height/2 + DeviceSpecs.flatTireHeight/2
-        height: parent.height*0.2
-        width: height
         z: 2
-        rotation: compassMode.value == 1 && compass.reading ? 360 - compass.reading.azimuth : 45
+        //% "Keep map north up"
+        Accessible.name: qsTrId("id-map-north-up")
         onClicked: compassMode.value = enableCompass.value ? (compassMode.value+1)%3 : 0
         onPressAndHold: {
             if (compassMode.value == 2) {compassMode.value = 0}
             mapView.bearing = 0
         }
-        Icon {
-            anchors.fill: parent
-            name: compass.reading && compass.reading.calibrationLevel > 0 ? "ios-compass-outline" : "ios-infinite-outline"
-            rotation: -45
-            color: colors.primary
-        }
     }
     IconButton {
+        objectName: "locate"
         iconName: "ios-locate-outline"
+        size: controls.buttonSize
+        variant: "tonal"
         anchors.verticalCenter: parent.verticalCenter
         anchors.verticalCenterOffset: height/2 + DeviceSpecs.flatTireHeight/2
         anchors.left: parent.left
-        height: parent.height*0.2
-        width: height
-        iconColor: colors.primary
+        anchors.leftMargin: Theme.margin.side
         z: 2
-        onClicked: positionProvider.update()
+        //% "Re-center map to your location"
+        Accessible.name: qsTrId("id-map-recenter")
+        onClicked: {
+            locationStatus.request()
+            positionProvider.update()
+        }
     }
     IconButton {
+        objectName: "menu"
         iconName: "ios-menu-outline"
+        size: controls.buttonSize
+        variant: "tonal"
         anchors.bottom: parent.bottom
+        anchors.bottomMargin: Theme.space.l
         anchors.right: parent.horizontalCenter
-        height: parent.height*0.2
-        width: height
-        iconColor: colors.primary
         z: 2
         onClicked: pageStack.push(settingsPage,{})
     }
     IconButton {
+        objectName: "pin"
         iconName: "ios-pin-outline"
+        size: controls.buttonSize
+        variant: "tonal"
         anchors.bottom: parent.bottom
+        anchors.bottomMargin: Theme.space.l
         anchors.left: parent.horizontalCenter
-        height: parent.height*0.2
-        width: height
-        iconColor: colors.primary
         z: 2
         onClicked: {
             parent.visible = false

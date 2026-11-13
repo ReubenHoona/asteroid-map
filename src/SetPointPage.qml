@@ -22,8 +22,14 @@ import Nemo.Configuration
 
 Item {
     id: root
+    // set by the LayerStack
+    property int depth
+    property var pop
     Asteroid.PageHeader {
-        text: editMode ? "Edit waypoint" : "Add waypoint"
+        //% "Edit waypoint"
+        text: editMode ? qsTrId("id-map-edit-waypoint")
+                       //% "Add waypoint"
+                       : qsTrId("id-map-add-waypoint")
     }
     ConfigurationValue {
         id: waypointList
@@ -40,7 +46,7 @@ Item {
                 dateLabel.text = Qt.formatDateTime(currWaypointData[4])
             } else {
                 editIndex = waypointArray.length
-                selectedColor = colors.secondary
+                selectedColor = Asteroid.Theme.color.primary.toString()
             }
         }
     }
@@ -55,40 +61,46 @@ Item {
     Flickable {
         anchors.fill: parent
         contentHeight: contentColumn.implicitHeight
-        anchors.leftMargin: root.width*0.15
-        anchors.rightMargin: root.width*0.15
+        anchors.leftMargin: Asteroid.Theme.margin.titleSide
+        anchors.rightMargin: Asteroid.Theme.margin.titleSide
         Column {
             id: contentColumn
             anchors.fill: parent
-            Item { width: parent.width ; height: root.width*0.2 }
+            Item { width: parent.width ; height: Asteroid.Theme.margin.listTop }
 
             Asteroid.TextField {
                 id: textBox
                 width: parent.width
-                height: parent.width*0.2
-                previewText: "Waypoint name"
+                height: Asteroid.Theme.size.button
+                //% "Waypoint name"
+                previewText: qsTrId("id-map-waypoint-name")
                 text: Qt.formatDateTime(new Date)
             }
 
             Asteroid.Label {
                 id: dateLabel
                 width: parent.width
-                height: root.width*0.1
+                height: Asteroid.Theme.size.button / 2
+                role: "bodySmall"
+                color: Asteroid.Theme.color.onSurfaceVariant
+                horizontalAlignment: Text.AlignHCenter
                 visible: editMode
             }
             ListView {
                 id: iconSelectorView
                 width: root.width
-                height: root.height*0.2
+                height: Asteroid.Theme.size.iconButtonSmall
                 anchors.horizontalCenter: parent.horizontalCenter
                 orientation: ListView.Horizontal
                 model: iconModel
+                // the chosen icon is a filled M3 icon button, the others plain ones
                 delegate: Asteroid.IconButton {
                     iconName: name
                     onClicked: root.selectedIcon = model.name
-                    height: iconSelectorView.height
-                    width: height
-                    iconColor: root.selectedIcon == model.name ? colors.textDefault : colors.textUnselected
+                    size: Asteroid.Theme.size.iconButtonSmall
+                    variant: root.selectedIcon == model.name ? "filled" : "plain"
+                    iconColor: root.selectedIcon == model.name ? Asteroid.Theme.color.onPrimary
+                                                               : Asteroid.Theme.color.onSurfaceVariant
                 }
                 ListModel {
                     id: iconModel
@@ -119,23 +131,26 @@ Item {
                 }
             }
             Row {
-                height: root.width*0.2
+                height: Asteroid.Theme.size.iconButton
                 anchors.horizontalCenter: parent.horizontalCenter
+                spacing: Asteroid.Theme.space.xs
                 Asteroid.IconButton {
-                    height: parent.height
-                    width: height
+                    objectName: "removeWaypoint"
+                    size: Asteroid.Theme.size.iconButton
+                    variant: "tonal"
                     iconName: "ios-trash-circle"
                     visible: editMode
                     onClicked: removeWaypoint(editIndex)
                 }
                 Asteroid.IconButton {
-                    height: parent.height
-                    width: height
+                    objectName: "saveWaypoint"
+                    size: Asteroid.Theme.size.iconButton
+                    variant: "filled"
                     iconName: "ios-checkmark-circle-outline"
                     onClicked: commitChanges(editIndex)
                 }
             }
-            Item { width: parent.width ; height: root.width*0.2 }
+            Item { width: parent.width ; height: Asteroid.Theme.margin.listBottom }
         }
     }
 
@@ -144,7 +159,7 @@ Item {
         var writebuffer = {}
         writebuffer[0] = selectedIcon
         writebuffer[1] = [coord.latitude,coord.longitude]
-        writebuffer[2] = selectedColor //the colors.secondary is currently a placeholder. it would be nice to let users select colours, but I CBA to write a colour picker right now
+        writebuffer[2] = selectedColor //the theme's primary colour is currently a placeholder. it would be nice to let users select colours, but I CBA to write a colour picker right now
         writebuffer[3] = textBox.text
         writebuffer[4] = new Date()
         waypointArray[index] = writebuffer

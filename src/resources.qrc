@@ -7,5 +7,6 @@
         <file>SetPointPage.qml</file>
         <file>SettingsPage.qml</file>
         <file>MapWaypoint.qml</file>
+        <file>LocationStatus.qml</file>
     </qresource>
 </RCC>

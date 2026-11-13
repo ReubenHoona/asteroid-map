@@ -22,6 +22,10 @@ import QtLocation
 import QtSensors
 
 Item {
+    objectName: "mainMapView"
+    //! what the map says about the position fix (and for tests)
+    readonly property QtObject location: locationStatus
+
     ConfigurationValue {
         id: mapZoom
         key: "/map/view/zoomlevel"
@@ -53,11 +57,63 @@ Item {
         Component.onCompleted: mapView.updateWaypoints()
     }
 
+    LocationStatus {
+        id: locationStatus
+        sourceActive: positionProvider.active
+        hasFix: positionProvider.position.coordinate.isValid
+        sourceError: positionProvider.sourceError !== PositionSource.NoError
+    }
+
     Label {
-        text: "Map Data from OpenStreetMap"
-        font.pixelSize: parent.width*0.03
+        objectName: "loadingCredit"
+        //% "Map Data from OpenStreetMap"
+        text: qsTrId("id-map-data-from-osm")
+        role: "bodyExtraSmall"
+        color: Theme.color.onSurfaceVariant
+        // between the two columns of buttons
+        width: parent.width - 2 * (Theme.margin.side + Theme.size.iconButtonSmall)
+        wrapMode: Text.Wrap
+        maximumLineCount: 3
+        horizontalAlignment: Text.AlignHCenter
         anchors.centerIn: parent
         z: 0
+    }
+
+    // "Waiting for location..." while a fix is awaited, "Can't detect your
+    // location" when none came (stock Maps strings)
+    Rectangle {
+        id: locationNote
+        objectName: "locationNote"
+        readonly property string state: locationStatus.state
+        visible: state === "waiting" || state === "failed"
+        anchors.horizontalCenter: parent.horizontalCenter
+        // under the time text, above the buttons
+        y: Theme.margin.scaffoldVertical
+        width: Math.min(parent.width - 2 * Theme.margin.side, noteLabel.implicitWidth + 2 * Theme.space.l)
+        height: noteLabel.implicitHeight + 2 * Theme.space.s
+        radius: Math.min(Theme.shape.large, height / 2)
+        color: state === "failed" ? Theme.color.errorContainer : Theme.color.surfaceContainer
+        z: 4
+        Label {
+            id: noteLabel
+            objectName: "locationNoteText"
+            anchors {
+                left: parent.left
+                right: parent.right
+                verticalCenter: parent.verticalCenter
+                leftMargin: Theme.space.l
+                rightMargin: Theme.space.l
+            }
+            role: "bodyExtraSmall"
+            color: locationNote.state === "failed" ? Theme.color.onErrorContainer : Theme.color.onSurface
+            horizontalAlignment: Text.AlignHCenter
+            wrapMode: Text.Wrap
+            maximumLineCount: 2
+            //% "Can't detect your location"
+            text: locationNote.state === "failed" ? qsTrId("id-map-cant-detect-location")
+                                                   //% "Waiting for location..."
+                                                   : qsTrId("id-map-waiting-for-location")
+        }
     }
     Map {
         id: mapView
@@ -65,7 +121,7 @@ Item {
         activeMapType: supportedMapTypes[supportedMapTypes.length - 1]
         anchors.fill: parent
         copyrightsVisible: false //this is compensated by showing the copyright when application is loading
-        color: "#00000000"
+        color: "transparent"
         z: 1
         Component.onCompleted: {
             zoomLevel = mapZoom.value
@@ -131,12 +187,13 @@ Item {
             anchorPoint.y: sourceItem.height / 2
             z: 3
             sourceItem: Rectangle {
-                width: Dims.l(6)
+                // a dark disc with a pale ring: visible on light and dark tiles
+                width: Theme.dp(12)
                 height: width
                 radius: width / 2
-                color: "#4285f4"
-                border.color: "white"
-                border.width: Dims.l(1)
+                color: Theme.color.primaryContainer
+                border.color: Theme.color.primary
+                border.width: Theme.dp(2)
             }
         }
         property MapQuickItem mapItem

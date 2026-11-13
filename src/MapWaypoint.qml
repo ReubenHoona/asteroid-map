@@ -29,10 +29,11 @@ MapQuickItem {
     property color iconColor
     property int index
     sourceItem: Asteroid.IconButton {
-        width: Asteroid.Dims.w(12)
+        width: Asteroid.Theme.dp(24)
         iconName: "waypoint"
         height: width
-        iconColor: root.iconColor.hsvValue < 0.5 ? "#E0E0E0" : colors.primary
+        // the pin is light on a dark waypoint colour, dark on a light one
+        iconColor: root.iconColor.hsvValue < 0.5 ? Asteroid.Theme.color.onSurface : Asteroid.Theme.color.surfaceContainer
         Asteroid.Icon {
             anchors.centerIn: parent
             width: parent.width*0.9
