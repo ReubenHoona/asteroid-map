@@ -43,7 +43,7 @@ Item {
                 root.selectedIcon = currWaypointData[0]
                 root.selectedColor = currWaypointData[2]
                 textBox.text = currWaypointData[3]
-                dateLabel.text = Qt.formatDateTime(currWaypointData[4])
+                dateLabel.text = root.whenText(currWaypointData[4], "yMMMd")
             } else {
                 editIndex = waypointArray.length
                 selectedColor = Asteroid.Theme.color.primary.toString()
@@ -52,6 +52,12 @@ Item {
     }
     Asteroid.HandWritingKeyboard {
         anchors.fill: parent
+    }
+    // The date and the time in the system 12/24 hour format (TimeFormat, as
+    // stock: "1:05 pm" or "13:05", no leading zero in 12 hour time)
+    function whenText(when, skeleton) {
+        var d = new Date(when)
+        return Asteroid.TimeFormat.date(d, skeleton) + ", " + Asteroid.TimeFormat.time(d)
     }
     property string selectedIcon: "ios-locate-outline"
     property string selectedColor
@@ -74,7 +80,7 @@ Item {
                 height: Asteroid.Theme.size.button
                 //% "Waypoint name"
                 previewText: qsTrId("id-map-waypoint-name")
-                text: Qt.formatDateTime(new Date)
+                text: root.whenText(new Date(), "MMMd")
             }
 
             Asteroid.Label {
