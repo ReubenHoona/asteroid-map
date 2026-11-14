@@ -83,10 +83,7 @@ Item {
         z: 2
         //% "Re-center map to your location"
         Accessible.name: qsTrId("id-map-recenter")
-        onClicked: {
-            locationStatus.request()
-            positionProvider.update()
-        }
+        onClicked: mapRoot.locate()
     }
     IconButton {
         objectName: "menu"

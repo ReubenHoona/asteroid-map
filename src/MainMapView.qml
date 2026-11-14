@@ -20,8 +20,10 @@ import Nemo.Configuration
 import QtPositioning
 import QtLocation
 import QtSensors
+import Nemo.DBus
 
 Item {
+    id: mapRoot
     objectName: "mainMapView"
     //! what the map says about the position fix (and for tests)
     readonly property QtObject location: locationStatus
@@ -57,8 +59,59 @@ Item {
         Component.onCompleted: mapView.updateWaypoints()
     }
 
+    // Settings > Location (CR-21): off, the map asks for no fix and says, as
+    // stock Maps does, "Enable watch location?"
+    ConfigurationValue {
+        id: locationEnabled
+        key: "/org/asteroidos/settings/location-enabled"
+        defaultValue: true
+    }
+    readonly property bool locationOn: locationEnabled.value !== false && locationEnabled.value !== "false"
+
+    // the launcher's "location in use" indicator (CR-04): claimed while the
+    // position source works for this app, released when it stops, the
+    // location switch goes off or the app closes. No reply is awaited.
+    DBusInterface {
+        id: ongoing
+        bus: DBus.SessionBus
+        service: "org.asteroidos.launcher"
+        path: "/org/asteroidos/launcher/ongoing"
+        iface: "org.asteroidos.launcher.Ongoing"
+    }
+    property bool _claimed: false
+    function claim(active) {
+        if (_claimed === active)
+            return
+        _claimed = active
+        ongoing.typedCall("SetInUse", [{ "type": "s", "value": "location" },
+                                       { "type": "b", "value": active }])
+    }
+    Connections {
+        target: locationStatus
+        function onInUseChanged() { mapRoot.claim(locationStatus.inUse) }
+    }
+    Connections {
+        target: locationEnabled
+        function onValueChanged() {
+            if (!mapRoot.locationOn)
+                positionProvider.stop()
+        }
+    }
+    Component.onDestruction: claim(false)
+
+    // the locate button: a fix is asked for only with location on
+    function locate() {
+        if (!locationOn) {
+            enableLocationDialog.open()
+            return
+        }
+        locationStatus.request()
+        positionProvider.update()
+    }
+
     LocationStatus {
         id: locationStatus
+        locationEnabled: mapRoot.locationOn
         sourceActive: positionProvider.active
         hasFix: positionProvider.position.coordinate.isValid
         sourceError: positionProvider.sourceError !== PositionSource.NoError
@@ -230,6 +283,16 @@ Item {
              pageStack.push(setPointPage,{coord: mapView.center})
         }
     }
+    // stock Maps (enable_location_title): the check turns location on
+    AlertDialog {
+        id: enableLocationDialog
+        objectName: "enableLocationDialog"
+        //% "Enable watch location?"
+        title: qsTrId("id-map-enable-location")
+        buttons: "confirmDismiss"
+        onConfirmed: locationEnabled.value = true
+    }
+    Component.onCompleted: if (!locationOn) Qt.callLater(enableLocationDialog.open)
     function editWaypoint(index) {
         pageStack.push(setPointPage,{editMode: true, editIndex: index})
     }

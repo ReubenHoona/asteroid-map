@@ -23,6 +23,7 @@ import QtQuick
  *
  *   "fix"      there is a position: nothing is said
  *   "idle"     the source is not running and no fix was asked for: nothing
+ *   "off"      Settings > Location is off: no fix is asked for, nothing runs
  *   "waiting"  the source runs, or a fix was asked for, and none has come
  *   "failed"   still none after waitTimeout, or the source reported an error
  *
@@ -32,6 +33,9 @@ import QtQuick
 QtObject {
     id: status
 
+    //! /org/asteroidos/settings/location-enabled (CR-21); false: stock's
+    //! "Enable watch location?" state, no fix is ever asked for
+    property bool locationEnabled: true
     //! PositionSource.active
     property bool sourceActive: false
     //! the position is a valid coordinate
@@ -44,13 +48,20 @@ QtObject {
     property bool requested: false
     property bool timedOut: false
 
-    readonly property bool pending: !hasFix && (sourceActive || requested)
-    readonly property string state: hasFix ? "fix"
+    readonly property bool pending: locationEnabled && !hasFix && (sourceActive || requested)
+    //! the position source works for this app: the launcher's "location in
+    //! use" claim (CR-04 SetInUse("location")) follows it; a fix that was
+    //! asked for and did not come in time no longer counts
+    readonly property bool inUse: locationEnabled && (sourceActive || (requested && !timedOut && !hasFix))
+    readonly property string state: !locationEnabled ? "off"
+        : hasFix ? "fix"
         : !pending ? "idle"
         : (sourceError || timedOut) ? "failed" : "waiting"
 
     //! the user asked for a fix (the locate button)
     function request() {
+        if (!locationEnabled || hasFix)
+            return
         requested = true
         timedOut = false
         if (pending)
