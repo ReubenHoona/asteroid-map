@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 - Arseniy Movshev <dodoradio@outlook.com>
+ * Copyright (C) 2026 eos-mainline contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
