@@ -1,0 +1,5 @@
+# Copyright (C) 2026 eos-mainline contributors
+# SPDX-License-Identifier: GPL-3.0-or-later
+module QtPositioning
+singleton QtPositioning 6.0 QtPositioning.qml
+PositionSource 6.0 PositionSource.qml

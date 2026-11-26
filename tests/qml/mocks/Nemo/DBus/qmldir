@@ -1,0 +1,6 @@
+# Copyright (C) 2026 eos-mainline contributors
+# SPDX-License-Identifier: GPL-3.0-or-later
+module Nemo.DBus
+singleton DBusLog 2.0 DBusLog.qml
+DBusInterface 2.0 DBusInterface.qml
+DBus 2.0 DBus.qml

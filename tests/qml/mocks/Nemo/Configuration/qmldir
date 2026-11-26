@@ -1,0 +1,5 @@
+# Copyright (C) 2026 eos-mainline contributors
+# SPDX-License-Identifier: GPL-3.0-or-later
+module Nemo.Configuration
+ConfigurationValue 1.0 ConfigurationValue.qml
+singleton ConfStore 1.0 ConfStore.qml
