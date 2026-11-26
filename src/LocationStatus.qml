@@ -51,8 +51,8 @@ QtObject {
     readonly property bool pending: locationEnabled && !hasFix && (sourceActive || requested)
     //! the position source works for this app: the launcher's "location in
     //! use" claim (CR-04 SetInUse("location")) follows it; a fix that was
-    //! asked for and did not come in time no longer counts
-    readonly property bool inUse: locationEnabled && (sourceActive || (requested && !timedOut && !hasFix))
+    //! asked for and did not come in time, or whose source failed, no longer counts
+    readonly property bool inUse: locationEnabled && (sourceActive || (requested && !timedOut && !hasFix && !sourceError))
     readonly property string state: !locationEnabled ? "off"
         : hasFix ? "fix"
         : !pending ? "idle"
