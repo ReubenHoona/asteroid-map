@@ -363,6 +363,15 @@ Item {
             verify(/^Icon=ios-topographic-outline$/m.test(desk), "the launcher icon")
         }
 
+        // D-30: the app list label is stock's app name "Maps" (com.google.android.apps.maps app_name), the
+        // //% text of the launcher name id that asteroid-generate-desktop writes as Name=
+        function test_app_list_label() {
+            var h = read("i18n/asteroid-map.desktop.h")
+            var m = /\/\/% "([^"\n]+)"[ \t]*\n[^\n]*qtTrId\("id-app-launcher-name"\)/.exec(h)
+            verify(m, "the launcher name id has a //% text")
+            compare(m[1], "Maps")
+        }
+
         // ------------------------------------------------ the picture
         function test_main_page_picture() {
             // the time at the top, as the image sets it
