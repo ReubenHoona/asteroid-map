@@ -308,7 +308,7 @@ Item {
             for (var i = 0; i < ConfStore.writes.length; i++)
                 keys[ConfStore.writes[i][0]] = true
             var want = ["/map/view/zoomlevel", "/map/view/location/lat", "/map/view/location/long",
-                        "/map/view/compassMode", "/map/waypointList"]
+                        "/map/view/compassMode", "/map/waypointList", "/map/open"]
             compare(Object.keys(keys).sort(), want.sort())
         }
 
@@ -316,7 +316,7 @@ Item {
         function test_sources() {
             var files = ["main.qml", "MainMapView.qml", "DefaultMapControls.qml", "SetPointMapControls.qml",
                          "SetPointPage.qml", "SettingsPage.qml", "MapWaypoint.qml", "LocationStatus.qml", "PhoneLink.qml",
-                         "NavigationPage.qml", "ManeuverIcon.qml"]
+                         "NavigationPage.qml", "ManeuverIcon.qml", "HomePage.qml", "SearchPage.qml", "DirectionsPage.qml"]
             var qrc = read("src/resources.qrc")
             var all = ""
             for (var i = 0; i < files.length; i++) {
@@ -345,11 +345,15 @@ Item {
                 texts[m[2]] = m[1]
             var names = Object.keys(ids).sort()
             compare(names, ["id-map-add-waypoint", "id-map-auto-launch", "id-map-auto-launch-caption",
-                            "id-map-cant-detect-location", "id-map-compass", "id-map-data-from-osm", "id-map-edit-waypoint",
-                            "id-map-enable-location", "id-map-made-by", "id-map-nav-arrived", "id-map-nav-eta",
-                            "id-map-nav-eta-distance", "id-map-nav-exit", "id-map-nav-rerouting", "id-map-nav-starting",
-                            "id-map-north-up", "id-map-odbl", "id-map-osm-credit", "id-map-recenter", "id-map-settings",
-                            "id-map-use-gps", "id-map-waiting-for-location", "id-map-waypoint-name"])
+                            "id-map-cant-detect-location", "id-map-compass", "id-map-data-from-osm", "id-map-dir-failed",
+                            "id-map-dir-no-maps", "id-map-dir-no-phone", "id-map-dir-old-app", "id-map-directions",
+                            "id-map-edit-waypoint", "id-map-enable-location", "id-map-home", "id-map-made-by",
+                            "id-map-mode-cycling", "id-map-mode-driving", "id-map-mode-transit", "id-map-mode-walking",
+                            "id-map-nav-arrived", "id-map-nav-eta", "id-map-nav-eta-distance", "id-map-nav-exit",
+                            "id-map-nav-rerouting", "id-map-nav-starting", "id-map-navigating", "id-map-north-up",
+                            "id-map-odbl", "id-map-open-map-view", "id-map-osm-credit", "id-map-recenter",
+                            "id-map-search-hint", "id-map-settings", "id-map-settings-chip", "id-map-start-search",
+                            "id-map-use-gps", "id-map-waiting-for-location", "id-map-waypoint-name", "id-map-work"])
             for (i = 0; i < names.length; i++)
                 verify(texts[names[i]] !== undefined, names[i] + " has no //% text")
             compare(texts["id-map-enable-location"], "Enable watch location?")

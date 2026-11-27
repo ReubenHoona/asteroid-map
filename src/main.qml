@@ -58,12 +58,16 @@ Application {
             return
         mapMade = true
         // the launcher opened the app for the phone's trip (NavAutoLaunch asks for "nav" once per
-        // trip): the trip screen is the first page, the map is not made
-        if (takeOpenRequest() === "nav") {
+        // trip): the trip screen is the first page, the map is not made; the Maps tile asks for the
+        // map itself ("map"); else the home, as stock Maps opens on its home screen (D-13)
+        var request = takeOpenRequest()
+        if (request === "nav") {
             openedForTrip = true
             pageStack.firstPage = navigationPage
-        } else {
+        } else if (request === "map") {
             pageStack.firstPage = mainMapView
+        } else {
+            pageStack.firstPage = homePage
         }
         phoneLink.refresh()
     }
@@ -81,7 +85,8 @@ Application {
     }
     readonly property bool autoLaunchOn: autoLaunch.value !== false && autoLaunch.value !== "false"
     // A request of the launcher, as the other apps' (contract row CR-36): dconf /map/open "<what>@<ms>",
-    // "nav" (the trip screen), read at start and on change; a request older than 60 s or more than 5 s
+    // "nav" (the trip screen) read at start and on change, "map" (the Maps tile: the map at the place
+    // it set) read at start and on change; a request older than 60 s or more than 5 s
     // ahead is ignored; the key is cleared. No timer: the request arrives as a change of the key.
     ConfigurationValue {
         id: openRequest
@@ -102,8 +107,11 @@ Application {
         return request.substring(0, at)
     }
     function openRequested() {
-        if (takeOpenRequest() === "nav")
+        var request = takeOpenRequest()
+        if (request === "nav")
             showTrip()
+        else if (request === "map" && mapPages === 0)
+            openMap()
     }
     //! the trip screen is the first page because the app was opened for it
     property bool openedForTrip: false
@@ -118,14 +126,34 @@ Application {
             return
         pageStack.push(navigationPage)
     }
-    // Exit: the trip screen goes, the map is under it (the phone goes on navigating)
+    // Exit: the trip screen goes, the page under it shows; opened for the trip: the home (the phone
+    // goes on navigating)
     function exitTrip() {
         if (pageStack.currentLayer && pageStack.currentLayer.objectName === "navigationPage") {
             pageStack.popAnim()
         } else if (openedForTrip) {
             openedForTrip = false
-            pageStack.firstPage = mainMapView
+            pageStack.firstPage = homePage
         }
+    }
+
+    // ---- the home (D-13): the map, search, Home and Work, directions on the phone ----
+    function openMap() {
+        pageStack.push(mainMapView)
+    }
+    //! the directions page for what the phone's maps app is asked (q) under its title
+    function directionsTo(q, title) {
+        pageStack.push(directionsPage, { query: q, title: title })
+    }
+    //! the phone took the trip: back to the home, stock's open-on-phone confirmation ("Check your phone")
+    function tripHandedOver(how) {
+        while (pageStack.layers.length > 0)
+            pageStack.pop(pageStack.currentLayer)
+        confirmation.showOpenOnPhone()
+    }
+    Confirmation {
+        id: confirmation
+        objectName: "openOnPhone"
     }
     Connections {
         target: phoneLink
@@ -165,6 +193,30 @@ Application {
     Component {
         id: settingsPage
         SettingsPage {}
+    }
+    Component {
+        id: homePage
+        HomePage {
+            link: phoneLink
+            onOpenMap: app.openMap()
+            onOpenSearch: pageStack.push(searchPage)
+            onOpenPlace: (place) => app.directionsTo(place, place === "home" ? homeText : workText)
+            onOpenTrip: app.showTrip()
+            onOpenSettings: pageStack.push(settingsPage)
+        }
+    }
+    Component {
+        id: searchPage
+        SearchPage {
+            onSearched: (q) => app.directionsTo(q, q)
+        }
+    }
+    Component {
+        id: directionsPage
+        DirectionsPage {
+            link: phoneLink
+            onStarted: (how) => app.tripHandedOver(how)
+        }
     }
     Component {
         id: navigationPage

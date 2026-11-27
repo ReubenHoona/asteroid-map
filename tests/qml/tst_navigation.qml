@@ -99,6 +99,7 @@ Item {
             tryVerify(function () { return navPage() !== undefined }, 5000, "the trip screen")
             wait(80)
         }
+        //! the app from the app list: the home
         function startPlain(conf, state) {
             ConfStore.reset()
             DBusLog.reset()
@@ -112,7 +113,7 @@ Item {
             verify(app, "the app")
             closed = 0
             app.closeApp = function () { tc.closed++ }
-            tryVerify(function () { return mainView() !== undefined }, 5000, "the map page")
+            tryVerify(function () { return named("homePage") !== undefined }, 5000, "the home")
             wait(80)
         }
         //! the trip screen pushed over the map has gone (the stock pop transition ran)
@@ -163,7 +164,7 @@ Item {
             navEvent({ st: "end" })
             popped()
             compare(shownNav(), undefined, "the trip screen closed")
-            verify(isShown(mainView()), "the map")
+            verify(isShown(named("homePage")), "the home")
             compare(closed, 0, "the app the user opened stays")
         }
 
@@ -229,9 +230,9 @@ Item {
             startForTrip({}, JSON.stringify({ st: "nav", ins: "Turn left onto Elm Way", di: "100 m", act: "left", age: 1 }))
             tryCompare(link(), "navigating", true, 3000)
             tapExit()
-            tryVerify(function () { return mainView() !== undefined }, 5000, "the map after Exit")
+            tryVerify(function () { return named("homePage") !== undefined }, 5000, "the home after Exit")
             compare(shownNav(), undefined)
-            compare(compass().active, true, "the map's compass")
+            compare(mainView(), undefined, "no map made")
             navEvent({ st: "end" })
             compare(closed, 0, "the user is on the map: the app stays")
         }
@@ -244,7 +245,7 @@ Item {
         }
         function test_opened_for_a_trip_that_ended(data) {
             startForTrip({}, data.state)
-            tryVerify(function () { return mainView() !== undefined }, 5000, "the map")
+            tryVerify(function () { return named("homePage") !== undefined }, 5000, "the home")
             settle()
             compare(shownNav(), undefined)
             verify(!link().navigating)
@@ -258,7 +259,7 @@ Item {
             ConfStore.set("/map/open", "nav@" + (Date.now() - 120000))
             var c = Qt.createComponent(Qt.resolvedUrl("../../src/main.qml"))
             app = createTemporaryObject(c, host, { width: 384, height: 384 })
-            tryVerify(function () { return mainView() !== undefined }, 5000, "the map, not the trip screen")
+            tryVerify(function () { return named("homePage") !== undefined }, 5000, "the home, not the trip screen")
             compare(navPage(), undefined)
             compare(ConfStore.writesOf("/map/open"), [""], "cleared")
         }
@@ -290,10 +291,10 @@ Item {
             startPlain({ "/map/autoLaunch": false }, JSON.stringify({ st: "nav", ins: "Head north", di: "20 m", act: "continue", age: 3 }))
             tryVerify(function () { return shownNav() !== undefined }, 3000, "the trip screen")
             settle()
-            compare(stack().layers.length, 1, "over the map")
+            compare(stack().layers.length, 1, "over the home")
             tapExit()
             popped()
-            verify(isShown(mainView()), "the map under it")
+            verify(isShown(named("homePage")), "the home under it")
         }
 
         function test_phone_gone() {
@@ -346,7 +347,7 @@ Item {
         // ------------------------------------------------ Settings: the Auto-launch switch
         function test_auto_launch_switch() {
             startPlain()
-            tapNamed("menu")
+            tapNamed("homeSettings")
             settle()
             var sw = named("autoLaunchSwitch")
             verify(sw && isShown(sw), "the switch")
@@ -383,7 +384,7 @@ Item {
         }
         function test_picture_settings() {
             startPlain({ "/org/asteroidos/ux/time-text": true })
-            tapNamed("menu")
+            tapNamed("homeSettings")
             settle()
             var f = named("settingsFlickable")
             f.contentY = Math.max(0, named("autoLaunchSwitch").y - Theme.dp(40))

@@ -22,11 +22,15 @@ TestCase {
     readonly property string listKey: "/map/waypointList"
 
     // ---- start and find ----
-    //! the app with these dconf values written before it starts
+    //! the app with these dconf values written before it starts; on the map, as the Maps tile opens
+    //! it (/map/open "map"), unless conf says otherwise (the home: tst_home.qml)
     function startApp(conf) {
         ConfStore.reset()
         DBusLog.reset()
-        for (var k in (conf || {}))
+        conf = conf || {}
+        if (!conf.hasOwnProperty("/map/open"))
+            conf["/map/open"] = "map@" + Date.now()
+        for (var k in conf)
             ConfStore.set(k, conf[k])
         var c = Qt.createComponent(Qt.resolvedUrl("../../src/main.qml"))
         verify(c.status === Component.Ready, c.errorString())

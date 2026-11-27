@@ -11,5 +11,8 @@
         <file>PhoneLink.qml</file>
         <file>NavigationPage.qml</file>
         <file>ManeuverIcon.qml</file>
+        <file>HomePage.qml</file>
+        <file>SearchPage.qml</file>
+        <file>DirectionsPage.qml</file>
     </qresource>
 </RCC>

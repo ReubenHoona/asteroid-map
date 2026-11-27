@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 // The start (src/main.qml, src/MainMapView.qml): QQuickView makes main.qml at 0 x 0 and gives it the
-// window's size after it. The map page is made once the app has its size (a map made at 0 x 0 did its
-// work twice); the location question, not on screen at start, is made once the first frame is drawn,
-// or at once when it is wanted before (location off at start: tst_location's test_off_at_start). The
-// whole app on the doubles of mocks/.
+// window's size after it. The first page is made once the app has its size (a map made at 0 x 0 did its
+// work twice): the home (D-13), or the map when the Maps tile asked for it (/map/open "map"); the
+// location question, not on screen at start, is made once the map's first frame is drawn, or at once
+// when it is wanted before (location off at start: tst_location's test_off_at_start). The whole app on
+// the doubles of mocks/.
 import QtQuick
 import QtTest
 import Nemo.Configuration
@@ -25,9 +26,27 @@ Item {
         name: "Start"
         host: host
 
+        function test_home_at_size_no_map() {
+            ConfStore.reset()
+            DBusLog.reset()
+            var c = Qt.createComponent(Qt.resolvedUrl("../../src/main.qml"))
+            verify(c.status === Component.Ready, c.errorString())
+            app = createTemporaryObject(c, null)
+            verify(app, "the app")
+            compare(named("homePage"), undefined, "no home at 0 x 0")
+            app.parent = host
+            var h = named("homePage")
+            verify(h, "the home, made at the screen's size")
+            compare(h.width, 384)
+            compare(mainView(), undefined, "no map page")
+            compare(compass().active, false, "no compass")
+        }
+
         function test_map_at_size_question_after_the_first_frame() {
             ConfStore.reset()
             DBusLog.reset()
+            // the Maps tile's request: the map is the first page
+            ConfStore.set("/map/open", "map@" + Date.now())
             var c = Qt.createComponent(Qt.resolvedUrl("../../src/main.qml"))
             verify(c.status === Component.Ready, c.errorString())
             app = createTemporaryObject(c, null)

@@ -25,6 +25,9 @@ import Nemo.DBus
 Item {
     id: mapRoot
     objectName: "mainMapView"
+    // set by the LayerStack when the home opens the map (D-13)
+    property int depth
+    property var pop
     //! what the map says about the position fix (and for tests)
     readonly property QtObject location: locationStatus
 
