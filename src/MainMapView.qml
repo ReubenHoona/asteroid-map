@@ -102,7 +102,7 @@ Item {
     // the locate button: a fix is asked for only with location on
     function locate() {
         if (!locationOn) {
-            enableLocationDialog.open()
+            locationDialog().open()
             return
         }
         locationStatus.request()
@@ -283,16 +283,35 @@ Item {
              pageStack.push(setPointPage,{coord: mapView.center})
         }
     }
-    // stock Maps (enable_location_title): the check turns location on
-    AlertDialog {
-        id: enableLocationDialog
-        objectName: "enableLocationDialog"
-        //% "Enable watch location?"
-        title: qsTrId("id-map-enable-location")
-        buttons: "confirmDismiss"
-        onConfirmed: locationEnabled.value = true
+    // stock Maps (enable_location_title): the check turns location on. Made once the first frame is
+    // drawn (the window's first frameSwapped), or at once when it is wanted before (locationDialog()).
+    property bool firstFrameDrawn: false
+    Connections {
+        target: mapRoot.Window.window
+        enabled: !mapRoot.firstFrameDrawn
+        function onFrameSwapped() { mapRoot.firstFrameDrawn = true }
     }
-    Component.onCompleted: if (!locationOn) Qt.callLater(enableLocationDialog.open)
+    property bool locationDialogWanted: false
+    function locationDialog() {
+        locationDialogWanted = true
+        return _locationDialogLoader.item
+    }
+    readonly property alias enableLocationDialog: _locationDialogLoader.item
+    Loader {
+        id: _locationDialogLoader
+        anchors.fill: parent
+        // a Dialog's own z
+        z: 1000
+        active: mapRoot.firstFrameDrawn || mapRoot.locationDialogWanted
+        sourceComponent: AlertDialog {
+            objectName: "enableLocationDialog"
+            //% "Enable watch location?"
+            title: qsTrId("id-map-enable-location")
+            buttons: "confirmDismiss"
+            onConfirmed: locationEnabled.value = true
+        }
+    }
+    Component.onCompleted: if (!locationOn) Qt.callLater(function () { mapRoot.locationDialog().open() })
     function editWaypoint(index) {
         pageStack.push(setPointPage,{editMode: true, editIndex: index})
     }

@@ -41,11 +41,22 @@ Application {
         id: compass
         active: enableCompass.value
     }
+    // The map is made once the app has its size (makeMap()): main.qml is made at 0 x 0 and gets the
+    // window's size after it, and a map made at 0 x 0 and then sized reached the first frame more
+    // than twice as late.
     LayerStack {
         id: pageStack
         anchors.fill: parent
-        firstPage: mainMapView
     }
+    property bool mapMade: false
+    function makeMap() {
+        if (mapMade || width <= 0)
+            return
+        mapMade = true
+        pageStack.firstPage = mainMapView
+    }
+    onWidthChanged: makeMap()
+    Component.onCompleted: makeMap()
     ConfigurationValue {
         id: enableCompass
         key: "/map/enableCompass"
