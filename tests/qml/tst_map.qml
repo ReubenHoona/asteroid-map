@@ -315,7 +315,8 @@ Item {
         // ------------------------------------------------ the sources
         function test_sources() {
             var files = ["main.qml", "MainMapView.qml", "DefaultMapControls.qml", "SetPointMapControls.qml",
-                         "SetPointPage.qml", "SettingsPage.qml", "MapWaypoint.qml", "LocationStatus.qml"]
+                         "SetPointPage.qml", "SettingsPage.qml", "MapWaypoint.qml", "LocationStatus.qml", "PhoneLink.qml",
+                         "NavigationPage.qml", "ManeuverIcon.qml"]
             var qrc = read("src/resources.qrc")
             var all = ""
             for (var i = 0; i < files.length; i++) {
@@ -343,11 +344,12 @@ Item {
             while ((m = pair.exec(all)) !== null)
                 texts[m[2]] = m[1]
             var names = Object.keys(ids).sort()
-            compare(names, ["id-map-add-waypoint", "id-map-cant-detect-location", "id-map-compass",
-                            "id-map-data-from-osm", "id-map-edit-waypoint", "id-map-enable-location",
-                            "id-map-made-by", "id-map-north-up", "id-map-odbl", "id-map-osm-credit",
-                            "id-map-recenter", "id-map-settings", "id-map-use-gps", "id-map-waiting-for-location",
-                            "id-map-waypoint-name"])
+            compare(names, ["id-map-add-waypoint", "id-map-auto-launch", "id-map-auto-launch-caption",
+                            "id-map-cant-detect-location", "id-map-compass", "id-map-data-from-osm", "id-map-edit-waypoint",
+                            "id-map-enable-location", "id-map-made-by", "id-map-nav-arrived", "id-map-nav-eta",
+                            "id-map-nav-eta-distance", "id-map-nav-exit", "id-map-nav-rerouting", "id-map-nav-starting",
+                            "id-map-north-up", "id-map-odbl", "id-map-osm-credit", "id-map-recenter", "id-map-settings",
+                            "id-map-use-gps", "id-map-waiting-for-location", "id-map-waypoint-name"])
             for (i = 0; i < names.length; i++)
                 verify(texts[names[i]] !== undefined, names[i] + " has no //% text")
             compare(texts["id-map-enable-location"], "Enable watch location?")

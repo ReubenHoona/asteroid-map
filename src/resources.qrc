@@ -8,5 +8,8 @@
         <file>SettingsPage.qml</file>
         <file>MapWaypoint.qml</file>
         <file>LocationStatus.qml</file>
+        <file>PhoneLink.qml</file>
+        <file>NavigationPage.qml</file>
+        <file>ManeuverIcon.qml</file>
     </qresource>
 </RCC>

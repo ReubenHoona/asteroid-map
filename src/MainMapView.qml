@@ -97,7 +97,10 @@ Item {
                 positionProvider.stop()
         }
     }
-    Component.onDestruction: claim(false)
+    Component.onDestruction: {
+        claim(false)
+        app.mapPages--
+    }
 
     // the locate button: a fix is asked for only with location on
     function locate() {
@@ -311,7 +314,11 @@ Item {
             onConfirmed: locationEnabled.value = true
         }
     }
-    Component.onCompleted: if (!locationOn) Qt.callLater(function () { mapRoot.locationDialog().open() })
+    Component.onCompleted: {
+        app.mapPages++
+        if (!locationOn)
+            Qt.callLater(function () { mapRoot.locationDialog().open() })
+    }
     function editWaypoint(index) {
         pageStack.push(setPointPage,{editMode: true, editIndex: index})
     }

@@ -92,6 +92,10 @@ TestCase {
     }
 
     // ---- the launcher's location claim (CR-04) ----
+    //! the calls to the launcher (the app's other call: btsyncd's PhoneEventState at start, R5 D-02)
+    function launcherCalls() {
+        return DBusLog.calls.filter(function (c) { return c.service === "org.asteroidos.launcher" })
+    }
     function claims() { return DBusLog.of("SetInUse") }
     //! the active flags sent so far, in order
     function claimFlags() { return claims().map(function (c) { return c.args[1] }) }

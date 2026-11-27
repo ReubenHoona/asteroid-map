@@ -39,8 +39,12 @@ Application {
     }
     Compass {
         id: compass
-        active: enableCompass.value
+        // only while a map page is there: the trip screen alone (opened by itself, the display
+        // perhaps off) reads no sensor
+        active: enableCompass.value && app.mapPages > 0
     }
+    //! the map pages that exist (MainMapView counts itself)
+    property int mapPages: 0
     // The map is made once the app has its size (makeMap()): main.qml is made at 0 x 0 and gets the
     // window's size after it, and a map made at 0 x 0 and then sized reached the first frame more
     // than twice as late.
@@ -53,10 +57,96 @@ Application {
         if (mapMade || width <= 0)
             return
         mapMade = true
-        pageStack.firstPage = mainMapView
+        // the launcher opened the app for the phone's trip (NavAutoLaunch asks for "nav" once per
+        // trip): the trip screen is the first page, the map is not made
+        if (takeOpenRequest() === "nav") {
+            openedForTrip = true
+            pageStack.firstPage = navigationPage
+        } else {
+            pageStack.firstPage = mainMapView
+        }
+        phoneLink.refresh()
     }
     onWidthChanged: makeMap()
     Component.onCompleted: makeMap()
+
+    // ---- the phone's trip (D-02): turn by turn navigation mirrored from the phone ----
+    PhoneLink { id: phoneLink }
+    // stock Maps' Auto-launch (auto_launch_watch_title): a trip the phone starts opens the trip
+    // screen; on by default (the user's choice, Q57); Settings has the switch
+    ConfigurationValue {
+        id: autoLaunch
+        key: "/map/autoLaunch"
+        defaultValue: true
+    }
+    readonly property bool autoLaunchOn: autoLaunch.value !== false && autoLaunch.value !== "false"
+    // A request of the launcher, as the other apps' (contract row CR-36): dconf /map/open "<what>@<ms>",
+    // "nav" (the trip screen), read at start and on change; a request older than 60 s or more than 5 s
+    // ahead is ignored; the key is cleared. No timer: the request arrives as a change of the key.
+    ConfigurationValue {
+        id: openRequest
+        key: "/map/open"
+        defaultValue: ""
+        onValueChanged: if (app.mapMade) Qt.callLater(app.openRequested)
+    }
+    //! the request's what ("" for none, or one too old), the key cleared
+    function takeOpenRequest() {
+        var request = String(openRequest.value || "")
+        if (request === "")
+            return ""
+        openRequest.value = ""
+        var at = request.lastIndexOf("@")
+        var age = Date.now() - Number(request.substring(at + 1))
+        if (at < 0 || !(age > -5000 && age < 60000))
+            return ""
+        return request.substring(0, at)
+    }
+    function openRequested() {
+        if (takeOpenRequest() === "nav")
+            showTrip()
+    }
+    //! the trip screen is the first page because the app was opened for it
+    property bool openedForTrip: false
+    //! how the app closes (the tests replace it)
+    property var closeApp: function () { Qt.quit() }
+    function tripShown() {
+        var top = pageStack.currentLayer ? pageStack.currentLayer : pageStack.firstPageItem
+        return !!top && top.objectName === "navigationPage"
+    }
+    function showTrip() {
+        if (tripShown())
+            return
+        pageStack.push(navigationPage)
+    }
+    // Exit: the trip screen goes, the map is under it (the phone goes on navigating)
+    function exitTrip() {
+        if (pageStack.currentLayer && pageStack.currentLayer.objectName === "navigationPage") {
+            pageStack.popAnim()
+        } else if (openedForTrip) {
+            openedForTrip = false
+            pageStack.firstPage = mainMapView
+        }
+    }
+    Connections {
+        target: phoneLink
+        // a trip began: at start (the app opened during one) always, later with Auto-launch on
+        function onTripStarted(atStart) {
+            if (atStart || app.autoLaunchOn)
+                app.showTrip()
+        }
+        // the trip ended: the trip screen closes; the app opened for it closes with it
+        function onTripEnded() {
+            if (app.openedForTrip && !pageStack.currentLayer)
+                app.closeApp()
+            else if (pageStack.currentLayer && pageStack.currentLayer.objectName === "navigationPage")
+                pageStack.popAnim()
+        }
+        // opened for a trip btsyncd does not know (it ended before the app came up): the map
+        function onStateChecked(answered) {
+            if (answered && app.openedForTrip && !phoneLink.navigating && !pageStack.currentLayer)
+                app.exitTrip()
+        }
+    }
     ConfigurationValue {
         id: enableCompass
         key: "/map/enableCompass"
@@ -75,5 +165,12 @@ Application {
     Component {
         id: settingsPage
         SettingsPage {}
+    }
+    Component {
+        id: navigationPage
+        NavigationPage {
+            link: phoneLink
+            onExitClicked: app.exitTrip()
+        }
     }
 }

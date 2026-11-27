@@ -65,6 +65,28 @@ Item {
                 checked: prioritiseGPS.value
                 onToggled: (state) => prioritiseGPS.value = state
             }
+            SwitchButton {
+                objectName: "autoLaunchSwitch"
+                width: parent.width
+                //% "Auto-launch"
+                text: qsTrId("id-map-auto-launch")
+                checked: app.autoLaunchOn
+                onToggled: (state) => autoLaunch.value = state
+            }
+            Label {
+                objectName: "autoLaunchCaption"
+                width: parent.width
+                role: "bodySmall"
+                color: Theme.color.onSurfaceVariant
+                leftPadding: Theme.space.xl
+                rightPadding: Theme.space.xl
+                topPadding: Theme.space.s
+                bottomPadding: Theme.space.s
+                wrapMode: Text.Wrap
+                clip: false
+                //% "When navigating on your phone, auto-launch the trip on watch"
+                text: qsTrId("id-map-auto-launch-caption")
+            }
             Label {
                 objectName: "caption"
                 width: parent.width

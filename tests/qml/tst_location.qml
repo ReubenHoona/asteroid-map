@@ -73,8 +73,10 @@ Item {
             compare(source().active, false)
             compare(dialog().shown, false)
             compare(named("locationNote").visible, false)
-            // nothing on the bus at all
-            compare(DBusLog.calls.length, 0)
+            // nothing on the bus but the one question to btsyncd where the phone's trip is (R5 D-02,
+            // answered from its memory)
+            compare(DBusLog.calls.map(function (c) { return c.method }), ["PhoneEventState"])
+            compare(launcherCalls().length, 0)
         }
         function test_off_at_start_data() {
             return [ { tag: "bool false", value: false }, { tag: "string false", value: "false" } ]
@@ -182,8 +184,8 @@ Item {
             compare(source().updateCalls, 1)
             compare(status().state, "waiting")
             compare(named("locationNoteText").text, "Waiting for location...")
-            compare(DBusLog.calls.length, 1)
-            var c = DBusLog.calls[0]
+            compare(launcherCalls().length, 1)
+            var c = launcherCalls()[0]
             compare(c.bus, DBus.SessionBus)
             compare(c.service, "org.asteroidos.launcher")
             compare(c.path, "/org/asteroidos/launcher/ongoing")
@@ -280,13 +282,13 @@ Item {
             a.destroy()
             wait(50)
             compare(claimFlags(), [true, false])
-            compare(DBusLog.calls[1].path, "/org/asteroidos/launcher/ongoing")
+            compare(launcherCalls()[1].path, "/org/asteroidos/launcher/ongoing")
         }
         function test_closing_without_a_claim_sends_nothing() {
             var a = startApp()
             a.destroy()
             wait(50)
-            compare(DBusLog.calls.length, 0)
+            compare(launcherCalls().length, 0)
             a = startApp()
             locate()
             source().fix(0, 0)
@@ -308,7 +310,7 @@ Item {
             tapNamed("zoomOut")
             mouseDrag(theMap(), 192, 150, 40, 20)
             compare(source().updateCalls, 0)
-            compare(DBusLog.calls.length, 0)
+            compare(launcherCalls().length, 0)
         }
 
         // ------------------------------------------------ LocationStatus
