@@ -59,7 +59,8 @@ Application {
         mapMade = true
         // the launcher opened the app for the phone's trip (NavAutoLaunch asks for "nav" once per
         // trip): the trip screen is the first page, the map is not made; the Maps tile asks for the
-        // map itself ("map"); else the home, as stock Maps opens on its home screen (D-13)
+        // map itself ("map"); else the home, as stock Maps opens on its home screen (D-13), with the
+        // search over it when the Search Maps complication asked for it ("search", A-16)
         var request = takeOpenRequest()
         if (request === "nav") {
             openedForTrip = true
@@ -68,6 +69,8 @@ Application {
             pageStack.firstPage = mainMapView
         } else {
             pageStack.firstPage = homePage
+            if (request === "search")
+                openSearch()
         }
         phoneLink.refresh()
     }
@@ -86,7 +89,8 @@ Application {
     readonly property bool autoLaunchOn: autoLaunch.value !== false && autoLaunch.value !== "false"
     // A request of the launcher, as the other apps' (contract row CR-36): dconf /map/open "<what>@<ms>",
     // "nav" (the trip screen) read at start and on change, "map" (the Maps tile: the map at the place
-    // it set) read at start and on change; a request older than 60 s or more than 5 s
+    // it set) read at start and on change, "search" (the launcher's Search Maps complication, A-16:
+    // the search over the home) read at start and on change; a request older than 60 s or more than 5 s
     // ahead is ignored; the key is cleared. No timer: the request arrives as a change of the key.
     ConfigurationValue {
         id: openRequest
@@ -112,6 +116,8 @@ Application {
             showTrip()
         else if (request === "map" && mapPages === 0)
             openMap()
+        else if (request === "search")
+            openSearch()
     }
     //! the trip screen is the first page because the app was opened for it
     property bool openedForTrip: false
@@ -140,6 +146,21 @@ Application {
     // ---- the home (D-13): the map, search, Home and Work, directions on the phone ----
     function openMap() {
         pageStack.push(mainMapView)
+    }
+    //! the search over the home (A-16). Stock's Search Maps complication opens Maps' home (CLEAR_TOP: what
+    //! was over it goes) scrolled to its category search (tap_action 2, SCROLL_POSITION_CATEGORY_SEARCH,
+    //! que.java:158, uon.java:61-66); this home has no categories (they are Google's), so its search opens
+    //! over it, as the home's search button does. Back is the home. Already the search: nothing.
+    function openSearch() {
+        if (pageStack.currentLayer && pageStack.currentLayer.objectName === "searchPage")
+            return
+        while (pageStack.layers.length > 0)
+            pageStack.pop(pageStack.currentLayer)
+        if (openedForTrip) {
+            openedForTrip = false
+            pageStack.firstPage = homePage
+        }
+        pageStack.push(searchPage)
     }
     //! the directions page for what the phone's maps app is asked (q) under its title
     function directionsTo(q, title) {

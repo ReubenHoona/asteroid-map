@@ -6,7 +6,8 @@
 // navigates, and Settings; search types the place on the stock keyboard; the directions page hands
 // the trip to the phone (the relay's act "nav" with the travel mode, as the launcher's assistant)
 // and the app says "Check your phone" (stock's open-on-phone confirmation). The Maps tile's request
-// (/map/open "map") opens the map itself. The whole app on the doubles of mocks/; the phone's answers
+// (/map/open "map") opens the map itself; the launcher's Search Maps complication (/map/open "search",
+// R6 A-16) opens the search over the home. The whole app on the doubles of mocks/; the phone's answers
 // are DBusLog replies and the relay's ActResult signal. Invented places only.
 import QtQuick
 import QtTest
@@ -172,6 +173,46 @@ Item {
             named("searchPage").submit("   ")
             wait(50)
             compare(stack().currentLayer.objectName, "searchPage")
+        }
+
+        function test_search_maps_request_at_start() {
+            // the Search Maps complication: the home first, the search over it with the keyboard at once
+            startHome({ "/map/open": "search@" + Date.now() })
+            compare(stack().firstPageItem.objectName, "homePage")
+            tryVerify(function () { return stack().currentLayer && stack().currentLayer.objectName === "searchPage" },
+                      3000, "the search over the home")
+            compare(stack().layers.length, 1)
+            compare(ConfStore.writesOf("/map/open"), [""], "the request taken")
+            compare(mainView(), undefined, "no map made")
+            var f = named("searchField")
+            tryVerify(function () { return f._keyboard !== null }, 3000, "the keyboard at once")
+            // back: the home
+            stack().pop(stack().currentLayer)
+            popped()
+            verify(shown("homeSearch"), "the home")
+        }
+
+        function test_search_maps_request_while_open() {
+            startHome()
+            // the map over the home, then the complication's request: what was over the home goes
+            tap(shown("homeMap"), "the map button")
+            settle()
+            verify(mainView(), "the map")
+            ConfStore.set("/map/open", "search@" + Date.now())
+            tryVerify(function () { return stack().currentLayer && stack().currentLayer.objectName === "searchPage" },
+                      3000, "the search")
+            compare(stack().layers.length, 1, "only the search over the home")
+            tryVerify(function () { return mainView() === undefined }, 3000, "the map page went")
+            // again while the search is up: nothing new
+            ConfStore.set("/map/open", "search@" + Date.now())
+            wait(100)
+            compare(stack().layers.length, 1)
+            // a stale request does nothing
+            stack().pop(stack().currentLayer)
+            popped()
+            ConfStore.set("/map/open", "search@" + (Date.now() - 120000))
+            wait(100)
+            compare(stack().layers.length, 0, "older than 60 s: ignored")
         }
 
         // ------------------------------------------------ directions
